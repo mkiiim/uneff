@@ -11,6 +11,33 @@ Uneff is designed to clean text files by removing BOM markers and other invisibl
 - Removing invisible control characters that break parsers
 - Normalizing text data from various sources
 
+## ⚠️ Warning and Disclaimer
+
+### Risk of Unintended Consequences
+
+**IMPORTANT**: Modifying text data by removing or replacing characters can have unintended consequences. While Uneff is designed to help with common data cleaning challenges, improper use may introduce new issues into your data.
+
+- **Always create backups** of your original files before processing
+- **Always validate** the results after processing to ensure data integrity
+- **Never use** on production data without thorough testing
+- **Be especially cautious** when working with:
+  - Internationalized text
+  - Complex data formats (like JSON, XML)
+  - Files with custom encoding
+  - Critical data where character precision matters
+
+### No Warranty
+
+This tool is provided "as is", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose and noninfringement. In no event shall the author(s) or copyright holder(s) be liable for any claim, damages or other liability, whether in an action of contract, tort or otherwise, arising from, out of or in connection with the software or the use or other dealings in the software.
+
+### Recommended Workflow
+
+1. **Analyze first**: Use the `--analyze` flag to identify issues without modifying files
+2. **Test on samples**: Process a small sample before running on large datasets
+3. **Verify results**: Implement verification checks after processing
+4. **Document changes**: Keep records of what was processed and why
+5. **Limit scope**: Only process the specific characters you know are problematic
+
 ## Features
 
 - Removes UTF-8, UTF-16, and UTF-32 BOM markers
