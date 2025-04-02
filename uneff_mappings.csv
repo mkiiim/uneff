@@ -1,0 +1,34 @@
+Character,Unicode,Name,Remove
+�,\ufffd,Replacement Character,True
+,\u0000,NULL,True
+,\u001a,Substitute,True
+,\u001c,File Separator,True
+,\u001d,Group Separator,True
+,\u001e,Record Separator,True
+,\u001f,Unit Separator,True
+,\u2028,Line Separator,True
+,\u2029,Paragraph Separator,True
+,\u200b,Zero Width Space,True
+,\u200c,Zero Width Non-Joiner,True
+,\u200d,Zero Width Joiner,True
+,\u200e,Left-to-Right Mark,True
+,\u200f,Right-to-Left Mark,True
+,\u202a,Left-to-Right Embedding,True
+,\u202b,Right-to-Left Embedding,True
+,\u202c,Pop Directional Formatting,True
+,\u202d,Left-to-Right Override,True
+,\u202e,Right-to-Left Override,True
+⁡,\u2061,Function Application,True
+⁢,\u2062,Invisible Times,True
+⁣,\u2063,Invisible Separator,True
+⁤,\u2064,Invisible Plus,True
+,\u2066,Left-to-Right Isolate,True
+,\u2067,Right-to-Left Isolate,True
+,\u2068,First Strong Isolate,True
+,\u2069,Pop Directional Isolate,True
+﻿,\ufeff,BOM (in middle of file),True
+é,\u00e9,Latin Small Letter E with Acute,True
+ȍ,\u020d,Latin Small Letter O with Double Grave,True
+’,\u2019,Right Single Quotation Mark,True
+
+
