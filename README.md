@@ -153,7 +153,7 @@ saveContentToYourSystem(cleanedContent);  // Your custom storage API
 
 // Analyze file without modifying it
 const analysis = uneff.analyzeFile('myfile.csv');
-console.log(`Found ${analysis.problematicCharCount} problematic characters`);
+console.log(`Found ${analysis.problematic_char_count} problematic characters`);
 ```
 
 ## Configuring Problematic Characters
@@ -245,6 +245,28 @@ for detail in analysis['character_details']:
         print(f"  Context: ...{location['context']}...")
 ```
 
+In JavaScript:
+
+```javascript
+// Analyze a file and get detailed report
+const analysis = uneff.analyzeFile('myfile.csv');
+
+// Get total count of problematic characters
+console.log(`Found ${analysis.problematic_char_count} problematic characters`);
+
+// Get information about each type of problematic character
+for (const detail of analysis.character_details) {
+    console.log(`Character: ${detail.name} [Unicode: ${detail.unicode}]`);
+    console.log(`Count: ${detail.count} instances`);
+    
+    // Print locations of up to 10 instances
+    for (const location of detail.sample_locations) {
+        console.log(`  Found at Line ${location.line}, Column ${location.column}`);
+        console.log(`  Context: ...${location.context}...`);
+    }
+}
+```
+
 The analysis results include:
 - Exact line and column positions of each problematic character
 - Absolute position in the file
@@ -288,6 +310,10 @@ Use the traditional methods with direct file I/O:
 uneff.clean_file('myfile.csv')
 ```
 
+```javascript
+uneff.cleanFile('myfile.csv');
+```
+
 ### For Custom Storage Systems
 
 Use the storage-agnostic core functions:
@@ -301,6 +327,17 @@ cleaned_content, char_counts = uneff.clean_content(content)
 
 # 3. Save using your storage API
 your_app.save_file_content(file_id, cleaned_content)
+```
+
+```javascript
+// 1. Get content using your storage API
+const content = your_app.get_file_content(file_id);
+
+// 2. Use Uneff to clean it in memory
+const [cleaned_content, char_counts] = uneff.cleanContent(content);
+
+// 3. Save using your storage API
+your_app.save_file_content(file_id, cleaned_content);
 ```
 
 ## Safe vs. Unsafe: When to Use Uneff
