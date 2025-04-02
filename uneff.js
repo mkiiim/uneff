@@ -3,6 +3,74 @@ const fs = require('fs');
 const path = require('path');
 
 /**
+ * Generate default character mappings as a CSV string.
+ * @returns {string} CSV content with default problematic character mappings
+ */
+function getDefaultMappingsCsv() {
+  // Default problematic Unicode characters with Replacement column
+  const defaultMappings = [
+    ["Character", "Unicode", "Name", "Remove", "Replacement"],
+    ["�", "\\ufffd", "Replacement Character", "True", ""],
+    ["", "\\u0000", "NULL", "True", ""],
+    ["", "\\u001a", "Substitute", "True", ""],
+    ["", "\\u001c", "File Separator", "True", ""],
+    ["", "\\u001d", "Group Separator", "True", ""],
+    ["", "\\u001e", "Record Separator", "True", ""],
+    ["", "\\u001f", "Unit Separator", "True", ""],
+    ["", "\\u2028", "Line Separator", "True", " "],
+    ["", "\\u2029", "Paragraph Separator", "True", "\n"],
+    ["", "\\u200b", "Zero Width Space", "True", ""],
+    ["", "\\u200c", "Zero Width Non-Joiner", "True", ""],
+    ["", "\\u200d", "Zero Width Joiner", "True", ""],
+    ["", "\\u200e", "Left-to-Right Mark", "True", ""],
+    ["", "\\u200f", "Right-to-Left Mark", "True", ""],
+    ["", "\\u202a", "Left-to-Right Embedding", "True", ""],
+    ["", "\\u202b", "Right-to-Left Embedding", "True", ""],
+    ["", "\\u202c", "Pop Directional Formatting", "True", ""],
+    ["", "\\u202d", "Left-to-Right Override", "True", ""],
+    ["", "\\u202e", "Right-to-Left Override", "True", ""],
+    ["⁡", "\\u2061", "Function Application", "True", ""],
+    ["⁢", "\\u2062", "Invisible Times", "True", ""],
+    ["⁣", "\\u2063", "Invisible Separator", "True", ""],
+    ["⁤", "\\u2064", "Invisible Plus", "True", ""],
+    ["", "\\u2066", "Left-to-Right Isolate", "True", ""],
+    ["", "\\u2067", "Right-to-Left Isolate", "True", ""],
+    ["", "\\u2068", "First Strong Isolate", "True", ""],
+    ["", "\\u2069", "Pop Directional Isolate", "True", ""],
+    ["﻿", "\\ufeff", "BOM (in middle of file)", "True", ""],
+    
+    // Smart quotes and typographic characters
+    ["'", "\\u2018", "Left Single Quotation Mark", "False", "'"],
+    ["'", "\\u2019", "Right Single Quotation Mark", "False", "'"],
+    [""", "\\u201c", "Left Double Quotation Mark", "False", "\""],
+    [""", "\\u201d", "Right Double Quotation Mark", "False", "\""],
+    ["‹", "\\u2039", "Single Left-Pointing Angle Quotation Mark", "False", "<"],
+    ["›", "\\u203a", "Single Right-Pointing Angle Quotation Mark", "False", ">"],
+    ["«", "\\u00ab", "Left-Pointing Double Angle Quotation Mark", "False", "<<"],
+    ["»", "\\u00bb", "Right-Pointing Double Angle Quotation Mark", "False", ">>"],
+    ["–", "\\u2013", "En Dash", "False", "-"],
+    ["—", "\\u2014", "Em Dash", "False", "--"],
+    ["…", "\\u2026", "Horizontal Ellipsis", "False", "..."],
+    ["′", "\\u2032", "Prime", "False", "'"],
+    ["″", "\\u2033", "Double Prime", "False", "\""],
+    ["‐", "\\u2010", "Hyphen", "False", "-"],
+    ["‑", "\\u2011", "Non-Breaking Hyphen", "False", "-"],
+    ["‒", "\\u2012", "Figure Dash", "False", "-"],
+    ["•", "\\u2022", "Bullet", "False", "*"],
+    ["·", "\\u00b7", "Middle Dot", "False", "."]
+    // Note: We're omitting the extended diacritic mappings to keep the JS version simpler
+  ];
+  
+  // Convert to CSV and write to file
+  return defaultMappings.map(row => 
+    row.map(cell => 
+      // Quote cells with commas
+      typeof cell === 'string' && cell.includes(',') ? `"${cell}"` : cell
+    ).join(',')
+  ).join('\n');
+}
+
+/**
  * Creates a default mapping file with common problematic characters.
  * @param {string} mappingFilePath - Path to save the mappings file
  * @param {boolean} verbose - Whether to print status messages
@@ -13,46 +81,8 @@ function createDefaultMappings(mappingFilePath, verbose = true) {
     console.log('Creating default mappings file...');
   }
   
-  // Default problematic Unicode characters
-  const defaultMappings = [
-    ['Character', 'Unicode', 'Name', 'Remove'],
-    ['\ufffd', '\\ufffd', 'Replacement Character', 'true'],
-    ['\u0000', '\\u0000', 'NULL', 'true'],
-    ['\u001a', '\\u001a', 'Substitute', 'true'],
-    ['\u001c', '\\u001c', 'File Separator', 'true'],
-    ['\u001d', '\\u001d', 'Group Separator', 'true'],
-    ['\u001e', '\\u001e', 'Record Separator', 'true'],
-    ['\u001f', '\\u001f', 'Unit Separator', 'true'],
-    ['\u2028', '\\u2028', 'Line Separator', 'true'],
-    ['\u2029', '\\u2029', 'Paragraph Separator', 'true'],
-    ['\u200b', '\\u200b', 'Zero Width Space', 'true'],
-    ['\u200c', '\\u200c', 'Zero Width Non-Joiner', 'true'],
-    ['\u200d', '\\u200d', 'Zero Width Joiner', 'true'],
-    ['\u200e', '\\u200e', 'Left-to-Right Mark', 'true'],
-    ['\u200f', '\\u200f', 'Right-to-Left Mark', 'true'],
-    ['\u202a', '\\u202a', 'Left-to-Right Embedding', 'true'],
-    ['\u202b', '\\u202b', 'Right-to-Left Embedding', 'true'],
-    ['\u202c', '\\u202c', 'Pop Directional Formatting', 'true'],
-    ['\u202d', '\\u202d', 'Left-to-Right Override', 'true'],
-    ['\u202e', '\\u202e', 'Right-to-Left Override', 'true'],
-    ['\u2061', '\\u2061', 'Function Application', 'true'],
-    ['\u2062', '\\u2062', 'Invisible Times', 'true'],
-    ['\u2063', '\\u2063', 'Invisible Separator', 'true'],
-    ['\u2064', '\\u2064', 'Invisible Plus', 'true'],
-    ['\u2066', '\\u2066', 'Left-to-Right Isolate', 'true'],
-    ['\u2067', '\\u2067', 'Right-to-Left Isolate', 'true'],
-    ['\u2068', '\\u2068', 'First Strong Isolate', 'true'],
-    ['\u2069', '\\u2069', 'Pop Directional Isolate', 'true'],
-    ['\ufeff', '\\ufeff', 'BOM (in middle of file)', 'true']
-  ];
-  
-  // Convert to CSV and write to file
-  const csvContent = defaultMappings.map(row => 
-    row.map(cell => 
-      // Quote cells with commas
-      cell.includes(',') ? `"${cell}"` : cell
-    ).join(',')
-  ).join('\n');
+  // Get default mappings CSV
+  const csvContent = getDefaultMappingsCsv();
   
   fs.writeFileSync(mappingFilePath, csvContent, 'utf8');
   if (verbose) {
@@ -61,10 +91,86 @@ function createDefaultMappings(mappingFilePath, verbose = true) {
 }
 
 /**
+ * Parse character mappings from CSV content string.
+ * @param {string} csvContent - Content of the mappings CSV
+ * @returns {Array} List of objects with char, name, and replacement properties
+ */
+function parseMappingCsv(csvContent) {
+  const mappings = [];
+  const rows = csvContent.split('\n');
+  
+  // Get header row
+  const header = rows[0].split(',');
+  
+  // Check if we have the Replacement column
+  const hasReplacementCol = 
+    header && 
+    header.length >= 5 && 
+    header[4].trim().toLowerCase() === "replacement";
+  
+  // Skip header row, parse each mapping
+  for (let i = 1; i < rows.length; i++) {
+    // Handle quoted fields with commas
+    let row = rows[i].trim();
+    if (!row) continue;
+    
+    let fields = [];
+    let inQuotes = false;
+    let currentField = '';
+    
+    for (let j = 0; j < row.length; j++) {
+      const char = row[j];
+      
+      if (char === '"' && (j === 0 || row[j-1] !== '\\')) {
+        inQuotes = !inQuotes;
+      } else if (char === ',' && !inQuotes) {
+        fields.push(currentField);
+        currentField = '';
+      } else {
+        currentField += char;
+      }
+    }
+    
+    fields.push(currentField); // Add the last field
+    
+    // Get values from fields
+    const unicodeStr = fields[1].trim();
+    const name = fields[2].trim();
+    const remove = fields[3].trim().toLowerCase() === 'true';
+    
+    // Get replacement character if available
+    let replacement = "";
+    if (hasReplacementCol && fields.length >= 5) {
+      replacement = fields[4];
+      
+      // Handle special escape sequences in replacement
+      replacement = replacement
+        .replace(/\\n/g, '\n')
+        .replace(/\\t/g, '\t')
+        .replace(/\\r/g, '\r');
+    }
+    
+    // Only add to mappings if set to remove
+    if (remove) {
+      // Convert unicode escape sequence to the actual character
+      try {
+        const char = eval(`"${unicodeStr}"`);
+        mappings.push({ char, name, replacement });
+      } catch (e) {
+        continue;
+      }
+    }
+  }
+  
+  return mappings;
+}
+
+/**
  * Read problematic character mappings from a CSV file.
+ * Creates default file if it doesn't exist.
  * @param {string} mappingFilePath - Path to the mappings file
  * @param {boolean} verbose - Whether to print status messages
- * @returns {Array<Object>} - Array of objects with char and name properties
+ * @returns {Array} List of objects with char, name, and replacement properties
  */
 function readCharMappings(mappingFilePath, verbose = true) {
   try {
@@ -73,62 +179,16 @@ function readCharMappings(mappingFilePath, verbose = true) {
       createDefaultMappings(mappingFilePath, verbose);
     }
     
-    // Read and parse the mappings file
-    const mappingData = fs.readFileSync(mappingFilePath, 'utf8');
-    const rows = mappingData.split('\n');
+    // Read file content
+    const csvContent = fs.readFileSync(mappingFilePath, 'utf8');
     
-    // Skip header row, parse each mapping
-    const mappings = [];
-    for (let i = 1; i < rows.length; i++) {
-      // Handle quoted fields with commas
-      let row = rows[i].trim();
-      if (!row) continue;
-      
-      let fields = [];
-      let inQuotes = false;
-      let currentField = '';
-      
-      for (let j = 0; j < row.length; j++) {
-        const char = row[j];
-        
-        if (char === '"' && (j === 0 || row[j-1] !== '\\')) {
-          inQuotes = !inQuotes;
-        } else if (char === ',' && !inQuotes) {
-          fields.push(currentField);
-          currentField = '';
-        } else {
-          currentField += char;
-        }
-      }
-      
-      fields.push(currentField); // Add the last field
-      
-      // Get values from fields
-      const unicodeStr = fields[1].trim();
-      const name = fields[2].trim();
-      const remove = fields[3].trim().toLowerCase() === 'true';
-      
-      // Only add to mappings if set to remove
-      if (remove) {
-        // Convert unicode escape sequence to the actual character
-        // For the JavaScript version, we can evaluate unicode directly:
-        let char;
-        try {
-          char = eval(`"${unicodeStr}"`);
-        } catch (e) {
-          if (verbose) {
-            console.warn(`Error parsing unicode sequence: ${unicodeStr}`);
-          }
-          continue;
-        }
-        
-        mappings.push({ char, name });
-      }
-    }
+    // Parse the CSV content
+    const mappings = parseMappingCsv(csvContent);
     
     if (verbose) {
       console.log(`Loaded ${mappings.length} problematic character mappings from: ${mappingFilePath}`);
     }
+    
     return mappings;
     
   } catch (error) {
@@ -137,199 +197,409 @@ function readCharMappings(mappingFilePath, verbose = true) {
       console.log('Using default mappings instead.');
     }
     
-    // Return default mappings if there's an error
-    return [
-      { char: '\ufffd', name: 'Replacement Character' },
-      { char: '\ufeff', name: 'BOM (in middle of file)' }
-    ];
+    // Parse the default mappings in memory
+    return parseMappingCsv(getDefaultMappingsCsv());
   }
 }
 
 /**
- * Strip problematic characters from a file.
- * @param {string} filePath - Path to the file to clean
- * @param {string} [mappingFilePath] - Path to character mappings file
- * @param {string} [outputPath] - Path to save the cleaned file
- * @param {boolean} [verbose=true] - Whether to print status messages
- * @param {boolean} [returnContent=false] - Whether to return the cleaned content
- * @returns {boolean|string} - True if successful, false if error, or the cleaned content
+ * Clean content by removing/replacing problematic Unicode characters.
+ * @param {Buffer|string} content - Content to clean
+ * @param {string} [mappingsCsv] - CSV content with character mappings
+ * @returns {Array} Tuple of [cleaned_content, char_counts]
  */
-function cleanFile(filePath, mappingFilePath, outputPath, verbose = true, returnContent = false) {
+function cleanContent(content, mappingsCsv = null) {
+  // Process content based on type
+  let textContent;
+  
+  if (Buffer.isBuffer(content)) {
+    // Handle BOM at start of binary content
+    if (content.slice(0, 3).equals(Buffer.from([0xEF, 0xBB, 0xBF]))) { // UTF-8 BOM
+      content = content.slice(3);
+    } else if (
+      content.slice(0, 2).equals(Buffer.from([0xFE, 0xFF])) || 
+      content.slice(0, 2).equals(Buffer.from([0xFF, 0xFE]))
+    ) { // UTF-16 BOM
+      content = content.slice(2);
+    } else if (
+      content.slice(0, 4).equals(Buffer.from([0x00, 0x00, 0xFE, 0xFF])) || 
+      content.slice(0, 4).equals(Buffer.from([0xFF, 0xFE, 0x00, 0x00]))
+    ) { // UTF-32 BOM
+      content = content.slice(4);
+    }
+    
+    // Try to decode to text
+    try {
+      textContent = content.toString('utf8');
+    } catch (error) {
+      // Fallback
+      textContent = content.toString('latin1');
+    }
+  } else {
+    textContent = content;
+  }
+  
+  // Load character mappings
+  if (!mappingsCsv) {
+    mappingsCsv = getDefaultMappingsCsv();
+  }
+  
+  const problematicChars = parseMappingCsv(mappingsCsv);
+  
+  // Check and remove BOM if present at start of string
+  let cleanedContent = textContent;
+  if (textContent && textContent.charCodeAt(0) === 0xFEFF) {
+    cleanedContent = textContent.slice(1);
+  }
+  
+  // Count and replace problematic characters
+  const charCounts = {};
+  
+  for (const { char, name, replacement } of problematicChars) {
+    // Use a regex to count all occurrences of the character
+    const regex = new RegExp(char, 'g');
+    const matches = cleanedContent.match(regex);
+    const count = matches ? matches.length : 0;
+    
+    if (count > 0) {
+      charCounts[name] = count;
+      cleanedContent = cleanedContent.replace(regex, replacement);
+    }
+  }
+  
+  return [cleanedContent, charCounts];
+}
+
+/**
+ * Analyze content for problematic Unicode characters without changing it.
+ * @param {Buffer|string} content - Content to analyze
+ * @param {string} [mappingsCsv] - CSV content with character mappings
+ * @returns {Object} Analysis results with detailed line and column locations
+ */
+function analyzeContent(content, mappingsCsv = null) {
+  // Process content based on type
+  let textContent;
+  let hasBom = false;
+  let bomType = null;
+  let encoding = "string (already decoded)";
+  let encodingErrors = false;
+  
+  if (Buffer.isBuffer(content)) {
+    // Check for BOM at start
+    if (content.slice(0, 3).equals(Buffer.from([0xEF, 0xBB, 0xBF]))) {
+      hasBom = true;
+      bomType = "UTF-8 BOM";
+    } else if (content.slice(0, 2).equals(Buffer.from([0xFE, 0xFF]))) {
+      hasBom = true;
+      bomType = "UTF-16 BE BOM";
+    } else if (content.slice(0, 2).equals(Buffer.from([0xFF, 0xFE]))) {
+      hasBom = true;
+      bomType = "UTF-16 LE BOM";
+    } else if (content.slice(0, 4).equals(Buffer.from([0x00, 0x00, 0xFE, 0xFF]))) {
+      hasBom = true;
+      bomType = "UTF-32 BE BOM";
+    } else if (content.slice(0, 4).equals(Buffer.from([0xFF, 0xFE, 0x00, 0x00]))) {
+      hasBom = true;
+      bomType = "UTF-32 LE BOM";
+    }
+    
+    // Try to decode to text
+    try {
+      textContent = content.toString('utf8');
+      encoding = "utf-8";
+      encodingErrors = false;
+    } catch (error) {
+      // Fallback
+      textContent = content.toString('latin1');
+      encoding = "latin-1 (fallback)";
+      encodingErrors = true;
+    }
+  } else {
+    textContent = content;
+    hasBom = textContent && textContent.charCodeAt(0) === 0xFEFF;
+    bomType = hasBom ? "UTF-8 BOM" : null;
+  }
+  
+  // Load character mappings
+  if (!mappingsCsv) {
+    mappingsCsv = getDefaultMappingsCsv();
+  }
+  
+  const problematicChars = parseMappingCsv(mappingsCsv);
+  
+  // Analyze problematic characters
+  const charCounts = {};
+  const characterDetails = [];
+  
+  // Split content into lines for location analysis
+  const lines = textContent.split('\n');
+  
+  for (const { char, name, replacement } of problematicChars) {
+    // Skip if character is not present
+    if (!textContent.includes(char)) {
+      continue;
+    }
+    
+    // Use a regex to count all occurrences of the character
+    const regex = new RegExp(char, 'g');
+    const matches = textContent.match(regex);
+    const count = matches ? matches.length : 0;
+    
+    charCounts[name] = count;
+    
+    // Find all occurrences with detailed location information
+    const allLocations = [];
+    
+    // Track absolute position in the file
+    let absolutePos = 0;
+    
+    for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
+      const line = lines[lineIdx];
+      
+      // Process each character in the line
+      for (let colIdx = 0; colIdx < line.length; colIdx++) {
+        if (line[colIdx] === char) {
+          // Calculate context (15 chars before and after)
+          const contextStart = Math.max(0, colIdx - 15);
+          const contextEnd = Math.min(line.length, colIdx + 15);
+          const context = line.substring(contextStart, contextEnd).replace(char, "↯");
+          
+          const locationInfo = {
+            line: lineIdx + 1,  // 1-based line number
+            column: colIdx + 1,  // 1-based column number
+            absolute_position: absolutePos,
+            context: context
+          };
+          allLocations.push(locationInfo);
+        }
+        
+        absolutePos++;
+      }
+      
+      // Account for newline character in absolute position
+      absolutePos++;
+    }
+    
+    // Limit sample locations to first 10 for display
+    const sampleLocations = allLocations.slice(0, 10);
+    
+    characterDetails.push({
+      character: char,
+      unicode: `U+${char.charCodeAt(0).toString(16).toUpperCase().padStart(4, '0')}`,
+      name: name,
+      replacement: replacement,
+      count: count,
+      sample_locations: sampleLocations,
+      all_locations: allLocations  // Include all locations for potential use
+    });
+  }
+  
+  // Compile results
+  const results = {
+    has_bom: hasBom,
+    bom_type: bomType,
+    encoding: encoding,
+    encoding_errors: encodingErrors,
+    total_length: textContent.length,
+    line_count: lines.length,
+    problematic_char_count: Object.values(charCounts).reduce((sum, count) => sum + count, 0),
+    character_counts: charCounts,
+    character_details: characterDetails
+  };
+  
+  return results;
+}
+
+/**
+ * Analyze a file for problematic Unicode characters.
+ * @param {string} filePath - Path to the file to analyze
+ * @param {string} [mappingFile] - Path to character mappings file
+ * @param {boolean} [verbose=true] - Whether to print status messages
+ * @returns {Object} Analysis results with detailed line and column locations
+ */
+function analyzeFile(filePath, mappingFile = null, verbose = true) {
   if (verbose) {
-    console.log(`Processing file: ${filePath}`);
+    console.log(`Analyzing file: ${filePath}`);
   }
   
   try {
-    // Handle default mapping file path
-    if (!mappingFilePath) {
-      // Determine script directory
+    // Use default mapping file if none provided
+    if (!mappingFile) {
       const scriptDir = path.dirname(process.argv[1] || '.');
-      mappingFilePath = path.join(scriptDir, 'uneff_mappings.csv');
+      mappingFile = path.join(scriptDir, 'uneff_mappings.csv');
     }
     
-    // Read the character mappings
-    const problematicChars = readCharMappings(mappingFilePath, verbose);
+    // Ensure mapping file exists (this will create it if it doesn't)
+    readCharMappings(mappingFile, verbose);
     
-    // Read the file
-    let content = fs.readFileSync(filePath, 'utf8');
+    // Now it's safe to read the file
+    const mappingsCsv = fs.readFileSync(mappingFile, 'utf8');
     
-    // Create output filename if not provided
-    if (!outputPath) {
-      const fileExt = filePath.lastIndexOf('.');
-      outputPath = fileExt !== -1 
-        ? filePath.substring(0, fileExt) + '_clean' + filePath.substring(fileExt) 
-        : filePath + '_clean';
-    }
+    // Read the file content as binary
+    const binaryContent = fs.readFileSync(filePath);
     
-    // Check if file has BOM character (FEFF) at the start
-    const hasBOM = content.charCodeAt(0) === 0xFEFF;
-    let modifiedContent = content;
-    let changesFound = false;
+    // Analyze the content
+    const results = analyzeContent(binaryContent, mappingsCsv);
     
-    if (hasBOM) {
-      if (verbose) {
-        console.log('BOM character detected at start of file. Removing...');
-      }
-      // Remove BOM character
-      modifiedContent = modifiedContent.slice(1);
-      changesFound = true;
-    } else if (verbose) {
-      console.log('No BOM character detected at start of file.');
-    }
+    // Add file info
+    results.file_path = filePath;
+    results.file_size = fs.statSync(filePath).size;
     
-    // Count and remove problematic characters
-    let charCount = {};
-    
-    for (const { char, name } of problematicChars) {
-      const regex = new RegExp(char, 'g');
-      const count = (modifiedContent.match(regex) || []).length;
-      
-      if (count > 0) {
-        charCount[name] = count;
-        modifiedContent = modifiedContent.replace(regex, '');
-        changesFound = true;
-      }
-    }
-    
-    // Write to new file without problematic characters
-    fs.writeFileSync(outputPath, modifiedContent, 'utf8');
-    
-    // Log results with more detailed information
+    // Print results if verbose
     if (verbose) {
-      if (changesFound) {
-        console.log('\nProblematic characters found and removed:');
-        for (const [name, count] of Object.entries(charCount)) {
-          console.log(`  - ${name}: ${count} instance(s)`);
-        }
+      console.log(`\nFile: ${filePath}`);
+      console.log(`Size: ${results.file_size} bytes`);
+      console.log(`Encoding: ${results.encoding}`);
+      console.log(`Lines: ${results.line_count}`);
+      
+      if (results.has_bom) {
+        console.log(`BOM: ${results.bom_type} detected at start`);
+      }
+      
+      if (results.problematic_char_count > 0) {
+        console.log(`\nFound ${results.problematic_char_count} problematic characters:`);
         
-        // Find locations of problematic characters for more detailed reporting
-        console.log('\nCharacter locations (showing up to 10 instances per character):');
-        const lines = content.split('\n');
-        
-        for (const { char, name } of problematicChars) {
-          if (content.includes(char)) {
-            console.log(`\n  Character: '${name}' [Unicode: ${char.codePointAt(0).toString(16)}]`);
-            let count = 0;
-            
-            for (let lineNum = 0; lineNum < lines.length; lineNum++) {
-              const line = lines[lineNum];
-              if (line.includes(char)) {
-                // Find all positions of the character in this line
-                let pos = line.indexOf(char);
-                while (pos !== -1) {
-                  count++;
-                  if (count <= 10) { // Limit to 10 examples per character
-                    const contextStart = Math.max(0, pos - 15);
-                    const contextEnd = Math.min(line.length, pos + 15);
-                    // Replace with visible symbol for display
-                    const context = line.substring(contextStart, contextEnd).replace(char, '↯');
-                    console.log(`    Line ${lineNum + 1}, Position ${pos + 1}: ...${context}...`);
-                  } else if (count === 11) {
-                    console.log(`    ... and ${(modifiedContent.match(new RegExp(char, 'g')) || []).length - 10} more instances`);
-                    break;
-                  }
-                  pos = line.indexOf(char, pos + 1);
-                }
-              }
-              if (count > 10) break;
-            }
+        for (const detail of results.character_details) {
+          console.log(`\n  Character: '${detail.name}' [Unicode: ${detail.unicode}]`);
+          console.log(`  Count: ${detail.count} instances`);
+          
+          // Print detailed location information
+          console.log("  Locations (showing up to 10 instances):");
+          detail.sample_locations.forEach((loc, idx) => {
+            console.log(`    #${idx + 1}: Line ${loc.line}, Column ${loc.column} (Pos: ${loc.absolute_position})`);
+            console.log(`        Context: ...${loc.context}...`);
+          });
+          
+          if (detail.count > 10) {
+            console.log(`    ... and ${detail.count - 10} more instances`);
           }
         }
-        
-        console.log(`\nCleaned file saved to: ${outputPath}`);
       } else {
-        console.log('No problematic characters found.');
-        console.log(`Clean copy saved to: ${outputPath}`);
+        console.log("\nNo problematic characters found.");
       }
     }
     
-    if (returnContent) {
-      return modifiedContent;
-    }
-    return true;
+    return results;
+    
   } catch (error) {
     if (verbose) {
-      console.error(`Error processing file: ${error.message}`);
+      console.error(`Error analyzing file: ${error.message}`);
     }
-    return false;
+    return { error: error.message };
   }
 }
 
 /**
  * Clean a text string by removing problematic characters.
  * @param {string} text - Text to clean
- * @param {string} [mappingFilePath] - Path to character mappings file
+ * @param {string} [mappingFile] - Path to character mappings file
  * @param {boolean} [verbose=false] - Whether to print status messages
  * @returns {string} - Cleaned text
  */
-function cleanText(text, mappingFilePath, verbose = false) {
+function cleanText(text, mappingFile = null, verbose = false) {
   try {
-    // Handle default mapping file path
-    if (!mappingFilePath) {
-      // Determine script directory
+    // Use default mapping file if none provided
+    if (!mappingFile) {
       const scriptDir = path.dirname(process.argv[1] || '.');
-      mappingFilePath = path.join(scriptDir, 'uneff_mappings.csv');
+      mappingFile = path.join(scriptDir, 'uneff_mappings.csv');
     }
     
-    // Read the character mappings
-    const problematicChars = readCharMappings(mappingFilePath, verbose);
+    // Ensure mapping file exists (this will create it if it doesn't)
+    readCharMappings(mappingFile, verbose);
     
-    // Check if text starts with BOM character (FEFF)
-    let cleanedText = text;
-    if (text && text.charCodeAt(0) === 0xFEFF) {
-      if (verbose) {
-        console.log('BOM character detected at start of text. Removing...');
-      }
-      cleanedText = text.slice(1);
-    }
+    // Now it's safe to read the file
+    const mappingsCsv = fs.readFileSync(mappingFile, 'utf8');
     
-    // Count and remove problematic characters
-    let charCount = {};
-    
-    for (const { char, name } of problematicChars) {
-      const regex = new RegExp(char, 'g');
-      const count = (cleanedText.match(regex) || []).length;
-      
-      if (count > 0) {
-        charCount[name] = count;
-        cleanedText = cleanedText.replace(regex, '');
-      }
-    }
+    // Clean the content
+    const [cleanedText, charCounts] = cleanContent(text, mappingsCsv);
     
     // Log results
-    if (verbose && Object.keys(charCount).length > 0) {
-      console.log('Problematic characters found and removed:');
-      for (const [name, count] of Object.entries(charCount)) {
+    if (verbose && Object.keys(charCounts).length > 0) {
+      console.log('Problematic characters found and processed:');
+      for (const [name, count] of Object.entries(charCounts)) {
         console.log(`  - ${name}: ${count} instance(s)`);
       }
     }
     
     return cleanedText;
+    
   } catch (error) {
     if (verbose) {
       console.error(`Error cleaning text: ${error.message}`);
     }
-    return text; // Return original text if there's an error
+    // Return original text if there's an error
+    return text;
+  }
+}
+
+/**
+ * Strip problematic characters from a file.
+ * @param {string} filePath - Path to the file to clean
+ * @param {string} [mappingFile] - Path to character mappings file
+ * @param {string} [outputPath] - Path to save the cleaned file
+ * @param {boolean} [verbose=true] - Whether to print status messages
+ * @param {boolean} [returnContent=false] - Whether to return the cleaned content
+ * @returns {boolean|string} - True if successful, false if error, or the cleaned content
+ */
+function cleanFile(filePath, mappingFile = null, outputPath = null, verbose = true, returnContent = false) {
+  if (verbose) {
+    console.log(`Processing file: ${filePath}`);
+  }
+  
+  try {
+    // Use default mapping file if none provided
+    if (!mappingFile) {
+      const scriptDir = path.dirname(process.argv[1] || '.');
+      mappingFile = path.join(scriptDir, 'uneff_mappings.csv');
+    }
+    
+    // Ensure mapping file exists (this will create it if it doesn't)
+    readCharMappings(mappingFile, verbose);
+    
+    // Now it's safe to read the file
+    const mappingsCsv = fs.readFileSync(mappingFile, 'utf8');
+    
+    // Read the file content as binary
+    const binaryContent = fs.readFileSync(filePath);
+    
+    // Create output filename if not provided
+    if (!outputPath) {
+      const fileDir = path.dirname(filePath);
+      const fileName = path.basename(filePath);
+      outputPath = path.join(fileDir, `uneffd_${fileName}`);
+    }
+    
+    // Clean the content
+    const [cleanedContent, charCounts] = cleanContent(binaryContent, mappingsCsv);
+    
+    // Write to new file without problematic characters
+    fs.writeFileSync(outputPath, cleanedContent, 'utf8');
+    
+    // Log results
+    if (verbose) {
+      if (Object.keys(charCounts).length > 0) {
+        console.log("\nProblematic characters found and processed:");
+        for (const [name, count] of Object.entries(charCounts)) {
+          console.log(`  - ${name}: ${count} instance(s)`);
+        }
+        console.log(`\nCleaned file saved to: ${outputPath}`);
+      } else {
+        console.log("No problematic characters found.");
+        console.log(`Clean copy saved to: ${outputPath}`);
+      }
+    }
+    
+    // Return content if requested
+    if (returnContent) {
+      return cleanedContent;
+    }
+    return true;
+    
+  } catch (error) {
+    if (verbose) {
+      console.error(`Error processing file: ${error.message}`);
+    }
+    return false;
   }
 }
 
@@ -342,18 +612,22 @@ function main() {
   
   // Parse arguments
   const args = process.argv.slice(2);
-  let filePath, mappingFilePath, outputPath, verbose = true;
+  let filePath, mappingFile, outputPath;
+  let verbose = true;
+  let analyze = false;
   
   // Process command-line arguments
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '-m' || args[i] === '--mapping') {
-      mappingFilePath = args[i + 1];
+      mappingFile = args[i + 1];
       i++;
     } else if (args[i] === '-o' || args[i] === '--output') {
       outputPath = args[i + 1];
       i++;
     } else if (args[i] === '-q' || args[i] === '--quiet') {
       verbose = false;
+    } else if (args[i] === '-a' || args[i] === '--analyze') {
+      analyze = true;
     } else if (!filePath) {
       filePath = args[i];
     }
@@ -362,12 +636,22 @@ function main() {
   // Check if file path is provided
   if (!filePath) {
     console.error('Error: Please provide a filename.');
-    console.log('Usage: node uneff.js <filename> [-m|--mapping <mapping_file>] [-o|--output <output_file>] [-q|--quiet]');
+    console.log('Usage: node uneff.js <filename> [-m|--mapping <mapping_file>] [-o|--output <output_file>] [-q|--quiet] [-a|--analyze]');
     return;
   }
   
-  // Clean the file
-  cleanFile(filePath, mappingFilePath, outputPath, verbose);
+  // Check if file exists
+  if (!fs.existsSync(filePath)) {
+    console.error(`Error: File '${filePath}' not found.`);
+    return;
+  }
+  
+  // Either analyze or clean the file
+  if (analyze) {
+    analyzeFile(filePath, mappingFile, verbose);
+  } else {
+    cleanFile(filePath, mappingFile, outputPath, verbose);
+  }
 }
 
 // Run the script if called directly, otherwise export functions
@@ -377,7 +661,12 @@ if (require.main === module) {
   module.exports = {
     cleanFile,
     cleanText,
+    cleanContent,
+    analyzeFile,
+    analyzeContent,
     readCharMappings,
-    createDefaultMappings
+    createDefaultMappings,
+    getDefaultMappingsCsv,
+    parseMappingCsv
   };
 }

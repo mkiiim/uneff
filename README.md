@@ -1,6 +1,6 @@
 # Uneff
 
-A versatile tool to remove BOM (Byte Order Mark) and problematic Unicode characters from text files.
+A versatile tool to remove BOM (Byte Order Mark) and problematic Unicode characters from text files and streams.
 
 ## Overview
 
@@ -10,6 +10,8 @@ Uneff is designed to clean text files by removing BOM markers and other invisibl
 - Fixing encoding issues in text files
 - Removing invisible control characters that break parsers
 - Normalizing text data from various sources
+
+I created this for use in my own personal project(s) and am including it here in case someone may find it useful as a starting point for their own data processing pipeline issues and challenges.
 
 ## ⚠️ Warning and Disclaimer
 
@@ -28,7 +30,7 @@ Uneff is designed to clean text files by removing BOM markers and other invisibl
 
 ### No Warranty
 
-This tool is provided "as is", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose and noninfringement. In no event shall the author(s) or copyright holder(s) be liable for any claim, damages or other liability, whether in an action of contract, tort or otherwise, arising from, out of or in connection with the software or the use or other dealings in the software.
+This tool is provided "as is", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose and noninfringement. In no event shall the authors or copyright holders be liable for any claim, damages or other liability, whether in an action of contract, tort or otherwise, arising from, out of or in connection with the software or the use or other dealings in the software.
 
 ### Recommended Workflow
 
@@ -42,11 +44,14 @@ This tool is provided "as is", without warranty of any kind, express or implied,
 
 - Removes UTF-8, UTF-16, and UTF-32 BOM markers
 - Handles invisible and problematic Unicode characters
+- Supports replacing characters instead of just removing them
+- Works with in-memory content (no direct file I/O required)
 - Configurable via a simple CSV file - no code changes needed
 - Can be used as a command-line tool or as a library in your projects
 - Available in both Python and JavaScript versions
 - Preserves original files by creating clean copies
 - Detailed reporting of changes made
+- Precise location reporting of problematic characters (line, column, and absolute position)
 
 ## Installation
 
@@ -75,7 +80,7 @@ python uneff.py myfile.csv
 
 Options:
 ```
-python uneff.py myfile.csv [--mapping mappings.csv] [--output output.csv] [--quiet]
+python uneff.py myfile.csv [--mapping mappings.csv] [--output output.csv] [--quiet] [--analyze]
 ```
 
 #### JavaScript Version
@@ -86,7 +91,7 @@ node uneff.js myfile.csv
 
 Options:
 ```
-node uneff.js myfile.csv [-m|--mapping mappings.csv] [-o|--output output.csv] [-q|--quiet]
+node uneff.js myfile.csv [-m|--mapping mappings.csv] [-o|--output output.csv] [-q|--quiet] [-a|--analyze]
 ```
 
 ### In Your Code
@@ -110,6 +115,15 @@ uneff.clean_file(
     output_path='cleaned.csv',
     verbose=False
 )
+
+# Working with in-memory content (storage-agnostic)
+content_bytes = get_content_from_your_system()  # Your custom storage API
+cleaned_content, char_counts = uneff.clean_content(content_bytes)
+save_content_to_your_system(cleaned_content)  # Your custom storage API
+
+# Analyze file without modifying it
+analysis = uneff.analyze_file('myfile.csv')
+print(f"Found {analysis['problematic_char_count']} problematic characters")
 ```
 
 #### JavaScript Version
@@ -131,36 +145,122 @@ uneff.cleanFile(
     'cleaned.csv',
     false  // verbose mode off
 );
+
+// Working with in-memory content (storage-agnostic)
+const contentBytes = getContentFromYourSystem();  // Your custom storage API
+const [cleanedContent, charCounts] = uneff.cleanContent(contentBytes);
+saveContentToYourSystem(cleanedContent);  // Your custom storage API
+
+// Analyze file without modifying it
+const analysis = uneff.analyzeFile('myfile.csv');
+console.log(`Found ${analysis.problematicCharCount} problematic characters`);
 ```
 
 ## Configuring Problematic Characters
 
-On first run, Uneff creates a default `uneff_mappings.csv` file with common problematic characters. You can edit this file to customize which characters are removed:
+On first run, Uneff creates a default `uneff_mappings.csv` file with common problematic characters. You can edit this file to customize how characters are handled:
 
-| Character | Unicode  | Name                     | Remove |
-|-----------|----------|--------------------------|--------|
-| �         | \ufffd   | Replacement Character    | True   |
-| [empty]   | \u0000   | NULL                     | True   |
-| [empty]   | \u200b   | Zero Width Space         | True   |
-| ﻿          | \ufeff    | BOM (in middle of file)   | True   |
-| ...       | ...      | ...                      | ...    |
+| Character | Unicode  | Name                     | Remove | Replacement |
+|-----------|----------|--------------------------|--------|-------------|
+| �         | \ufffd   | Replacement Character    | True   |             |
+| [empty]   | \u0000   | NULL                     | True   |             |
+| [empty]   | \u2028   | Line Separator           | True   | " "         |
+| [empty]   | \u2029   | Paragraph Separator      | True   | "\n"        |
+| [empty]   | \u200b   | Zero Width Space         | True   |             |
+| ﻿          | \ufeff    | BOM (in middle of file)   | True   |             |
+| ...       | ...      | ...                      | ...    | ...         |
 
-- To stop removing a specific character, change `True` to `False`
+- To stop processing a specific character, change `True` to `False`
 - To add new characters, add a new row with the appropriate Unicode escape sequence
+- Add a replacement character in the "Replacement" column to replace instead of remove
+- If "Remove" is True and "Replacement" is empty, the character is removed completely
 
-## What Characters are Removed?
+### Notes on the Replacement Field
 
-By default, Uneff removes these types of characters:
+- **Do not add quotes** around replacement values in the CSV file unless they contain special characters
+- Leave empty to remove the character completely
+- For whitespace characters:
+  - Use `\n` for newline
+  - Use `\t` for tab
+  - Use a space character for space
+- For multiple characters, simply type them as-is (e.g., `-->`)
+
+#### Special Characters in Replacements
+
+When your replacement contains special characters like commas, you must use quotes in the CSV:
+
+| Character | Unicode  | Name              | Remove | Replacement |
+|-----------|----------|-------------------|--------|-------------|
+| [empty]   | \u2063   | Invisible Separator | True  | ","         |
+
+The CSV should look like this in a text editor:
+```
+Character,Unicode,Name,Remove,Replacement
+,\u2063,Invisible Separator,True,","
+```
+
+Without the quotes, the comma would be interpreted as a new field separator.
+
+#### Additional Examples
+
+| Replacement For | Raw Text in CSV | Notes |
+|-----------------|-----------------|-------|
+| Comma | "," | Must be quoted |
+| Quote | """" | Double quotes to escape |
+| Tab character | \t | Escape sequence |
+| Newline | \n | Escape sequence |
+| Comma + text | ",.txt" | Must be quoted |
+
+## What Characters are Processed?
+
+By default, Uneff handles these types of characters:
 
 - BOM (Byte Order Mark) characters
 - Replacement Character (�)
 - Control characters (NULL, SUB, FS, GS, RS, US)
 - Zero-width spaces and joiners
 - Bidirectional text control characters
-- Line and paragraph separators
+- Line and paragraph separators (now replaced with spaces and newlines by default)
 - Other invisible formatting characters
 
-## Why Remove These Characters?
+## Advanced Analysis Features
+
+The analysis functions provide detailed information about problematic characters in your text:
+
+```python
+# Analyze a file and get detailed report
+analysis = uneff.analyze_file('myfile.csv')
+
+# Get total count of problematic characters
+print(f"Found {analysis['problematic_char_count']} problematic characters")
+
+# Get information about each type of problematic character
+for detail in analysis['character_details']:
+    print(f"Character: {detail['name']} [Unicode: {detail['unicode']}]")
+    print(f"Count: {detail['count']} instances")
+    
+    # Print locations of up to 10 instances
+    for location in detail['sample_locations']:
+        print(f"  Found at Line {location['line']}, Column {location['column']}")
+        print(f"  Context: ...{location['context']}...")
+```
+
+The analysis results include:
+- Exact line and column positions of each problematic character
+- Absolute position in the file
+- Surrounding context to help identify issues
+- BOM detection and encoding information
+- Character counts and statistics
+
+## First-Run Behavior
+
+When running Uneff for the first time:
+
+1. If a mapping file doesn't exist, Uneff automatically creates one with default settings.
+2. This happens seamlessly, allowing you to immediately process files without errors.
+3. The default mapping file (`uneff_mappings.csv`) is created in the same directory as the script.
+
+## Why Process These Characters?
 
 ### Common Problems Caused by Invisible Characters
 
@@ -175,11 +275,37 @@ By default, Uneff removes these types of characters:
 - **CSV Processing**: BOM markers can cause the first column name to be misread
 - **Data Analysis**: Invisible characters can cause misalignment in data processing
 - **API Integrations**: Data passed between systems can accumulate problematic characters
-- **Text Mining**: Control characters can corrupt text analysis 
+- **Text Mining**: Control characters can corrupt text analysis
+- **Custom Storage Systems**: Applications with their own storage systems can now leverage Uneff's capabilities
+
+## Integration Options
+
+### For Standard File Processing
+
+Use the traditional methods with direct file I/O:
+
+```python
+uneff.clean_file('myfile.csv')
+```
+
+### For Custom Storage Systems
+
+Use the storage-agnostic core functions:
+
+```python
+# 1. Get content using your storage API
+content = your_app.get_file_content(file_id)
+
+# 2. Use Uneff to clean it in memory
+cleaned_content, char_counts = uneff.clean_content(content)
+
+# 3. Save using your storage API
+your_app.save_file_content(file_id, cleaned_content)
+```
 
 ## Safe vs. Unsafe: When to Use Uneff
 
-### When It's Safe to Remove These Characters
+### When It's Safe to Process These Characters
 
 - **Data Processing Pipelines**: Before feeding data into analysis tools or databases
 - **Plain Text Content**: Regular text documents, logs, configuration files
@@ -194,60 +320,11 @@ By default, Uneff removes these types of characters:
 - **Source Code**: Some IDEs and development tools might use BOM markers intentionally
 - **XML/HTML**: These formats sometimes use control characters with specific meanings
 
-### Potential Risks When Removing Characters
+### Potential Risks When Processing Characters
 
-- **Text Layout Changes**: Removing bidirectional controls might affect text rendering in some languages
+- **Text Layout Changes**: Modifying bidirectional controls might affect text rendering in some languages
 - **Formatting Loss**: Some invisible characters serve legitimate formatting purposes
-- **Semantic Change**: In rare cases, removing zero-width joiners could change how text is displayed
-
-## Where These Characters Are Used/Tolerated
-
-### Commonly Used/Tolerated
-
-- **Word Processors**: Microsoft Word, Google Docs handle these characters properly
-- **Modern Web Browsers**: Most invisible characters display correctly
-- **Unicode-Aware Text Editors**: VS Code, Sublime Text, etc.
-- **Desktop Publishing Software**: InDesign and similar tools use these characters for fine control
-- **Internationalized Applications**: Apps supporting multiple languages often use bidirectional markers
-
-### Typically Not Tolerated
-
-- **Database Systems**: Most databases have restrictions on control characters
-- **CSV Parsers**: Many CSV processing libraries have issues with BOM and zero-width characters
-- **Legacy Systems**: Older software often can't handle these Unicode characters
-- **Command-Line Tools**: Many CLI tools interpret control characters in unwanted ways
-- **Programming Language Parsers**: Many compilers and interpreters reject certain control characters
-- **Data Analysis Tools**: R, pandas, and similar frameworks may misinterpret invisible characters
-
-## Examples
-
-### Cleaning a CSV with BOM
-
-Before:
-```
-﻿ID,Name,Value
-1,Test,100
-```
-
-After:
-```
-ID,Name,Value
-1,Test,100
-```
-
-### Removing Zero-Width Spaces
-
-Before (invisible spaces shown as `[ZWS]`):
-```
-Name[ZWS],Address[ZWS],Phone
-John[ZWS] Doe,123 Main St,[ZWS]555-1234
-```
-
-After:
-```
-Name,Address,Phone
-John Doe,123 Main St,555-1234
-```
+- **Semantic Change**: In rare cases, modifying zero-width joiners could change how text is displayed
 
 ## License
 
