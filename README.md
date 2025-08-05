@@ -55,16 +55,30 @@ This tool is provided "as is", without warranty of any kind, express or implied,
 
 ## Installation
 
-### Python Version
+### Python Package (Recommended)
 
+Install from PyPI:
+```bash
+pip install uneff
+```
+
+### Install from Git
+
+Install the latest development version:
+```bash
+pip install git+https://github.com/mkiiim/uneff.git
+```
+
+### Download Individual Files
+
+#### Python Script
 1. Download `uneff.py` to your project directory
 2. Make it executable (optional, for Unix-like systems):
-   ```
+   ```bash
    chmod +x uneff.py
    ```
 
-### JavaScript Version
-
+#### JavaScript Version
 1. Download `uneff.js` to your project directory
 2. Ensure you have Node.js installed
 
@@ -72,16 +86,32 @@ This tool is provided "as is", without warranty of any kind, express or implied,
 
 ### Command Line
 
-#### Python Version
+#### Python Package
+
+```bash
+uneff myfile.csv
+```
+
+#### Python Script
 
 ```bash
 python uneff.py myfile.csv
 ```
 
-Options:
+#### Options
+
+```bash
+# Using package
+uneff myfile.csv [-m mappings.csv] [-o output.csv] [-q] [-a]
+
+# Using script  
+python uneff.py myfile.csv [-m mappings.csv] [-o output.csv] [-q] [-a]
 ```
-python uneff.py myfile.csv [--mapping mappings.csv] [--output output.csv] [--quiet] [--analyze]
-```
+
+- `-m, --mapping`: Path to custom character mappings file
+- `-o, --output`: Path to save cleaned file (default: adds uneffd_ prefix)
+- `-q, --quiet`: Suppress status messages
+- `-a, --analyze`: Only analyze file without cleaning
 
 #### JavaScript Version
 
@@ -167,7 +197,7 @@ On first run, Uneff creates a default `uneff_mappings.csv` file with common prob
 | [empty]   | \u2028   | Line Separator           | True   | " "         |
 | [empty]   | \u2029   | Paragraph Separator      | True   | "\n"        |
 | [empty]   | \u200b   | Zero Width Space         | True   |             |
-| ﻿          | \ufeff    | BOM (in middle of file)   | True   |             |
+| ﻿          | \ufeff    | BOM                       | True   |             |
 | ...       | ...      | ...                      | ...    | ...         |
 
 - To stop processing a specific character, change `True` to `False`

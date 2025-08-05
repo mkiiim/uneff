@@ -16,9 +16,9 @@ from .core import (
     read_char_mappings
 )
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 __author__ = "Mark"
-__email__ = "mark@example.com"  # Update with your email
+__email__ = "mark.emila@gmail.com"
 __description__ = "Remove BOM and problematic Unicode characters from text files"
 
 __all__ = [

@@ -42,8 +42,8 @@ function getDefaultMappingsCsv() {
     // Smart quotes and typographic characters
     ["'", "\\u2018", "Left Single Quotation Mark", "False", "'"],
     ["'", "\\u2019", "Right Single Quotation Mark", "False", "'"],
-    [""", "\\u201c", "Left Double Quotation Mark", "False", "\""],
-    [""", "\\u201d", "Right Double Quotation Mark", "False", "\""],
+    ["\u201c", "\\u201c", "Left Double Quotation Mark", "False", "\""],
+    ["\u201d", "\\u201d", "Right Double Quotation Mark", "False", "\""],
     ["‹", "\\u2039", "Single Left-Pointing Angle Quotation Mark", "False", "<"],
     ["›", "\\u203a", "Single Right-Pointing Angle Quotation Mark", "False", ">"],
     ["«", "\\u00ab", "Left-Pointing Double Angle Quotation Mark", "False", "<<"],
@@ -134,9 +134,10 @@ function parseMappingCsv(csvContent) {
     fields.push(currentField); // Add the last field
     
     // Get values from fields
-    const unicodeStr = fields[1].trim();
-    const name = fields[2].trim();
-    const remove = fields[3].trim().toLowerCase() === 'true';
+    if (fields.length < 4) continue;
+    const unicodeStr = (fields[1] || '').trim();
+    const name = (fields[2] || '').trim();
+    const remove = (fields[3] || '').trim().toLowerCase() === 'true';
     
     // Get replacement character if available
     let replacement = "";
@@ -213,22 +214,7 @@ function cleanContent(content, mappingsCsv = null) {
   let textContent;
   
   if (Buffer.isBuffer(content)) {
-    // Handle BOM at start of binary content
-    if (content.slice(0, 3).equals(Buffer.from([0xEF, 0xBB, 0xBF]))) { // UTF-8 BOM
-      content = content.slice(3);
-    } else if (
-      content.slice(0, 2).equals(Buffer.from([0xFE, 0xFF])) || 
-      content.slice(0, 2).equals(Buffer.from([0xFF, 0xFE]))
-    ) { // UTF-16 BOM
-      content = content.slice(2);
-    } else if (
-      content.slice(0, 4).equals(Buffer.from([0x00, 0x00, 0xFE, 0xFF])) || 
-      content.slice(0, 4).equals(Buffer.from([0xFF, 0xFE, 0x00, 0x00]))
-    ) { // UTF-32 BOM
-      content = content.slice(4);
-    }
-    
-    // Try to decode to text
+    // Try to decode to text without removing BOM first
     try {
       textContent = content.toString('utf8');
     } catch (error) {
@@ -246,11 +232,8 @@ function cleanContent(content, mappingsCsv = null) {
   
   const problematicChars = parseMappingCsv(mappingsCsv);
   
-  // Check and remove BOM if present at start of string
+  // Use the full content for character mapping processing
   let cleanedContent = textContent;
-  if (textContent && textContent.charCodeAt(0) === 0xFEFF) {
-    cleanedContent = textContent.slice(1);
-  }
   
   // Count and replace problematic characters
   const charCounts = {};
@@ -316,7 +299,7 @@ function analyzeContent(content, mappingsCsv = null) {
     }
   } else {
     textContent = content;
-    hasBom = textContent && textContent.charCodeAt(0) === 0xFEFF;
+    hasBom = textContent && textContent.includes('\uFEFF');
     bomType = hasBom ? "UTF-8 BOM" : null;
   }
   

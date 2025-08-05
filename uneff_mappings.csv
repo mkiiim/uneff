@@ -46,16 +46,16 @@ Character,Unicode,Name,Remove,Replacement
 ‒,\u2012,Figure Dash,False,-
 •,\u2022,Bullet,False,*
 ·,\u00b7,Middle Dot,False,.
-á,\u00e1,Latin Small Letter A with Acute,True,a
-à,\u00e0,Latin Small Letter A with Grave,True,a
-â,\u00e2,Latin Small Letter A with Circumflex,True,a
+á,\u00e1,Latin Small Letter A with Acute,False,a
+à,\u00e0,Latin Small Letter A with Grave,False,a
+â,\u00e2,Latin Small Letter A with Circumflex,False,a
 ä,\u00e4,Latin Small Letter A with Diaeresis,False,a
 ã,\u00e3,Latin Small Letter A with Tilde,False,a
 å,\u00e5,Latin Small Letter A with Ring Above,False,a
 ç,\u00e7,Latin Small Letter C with Cedilla,False,c
-é,\u00e9,Latin Small Letter E with Acute,True,e
-è,\u00e8,Latin Small Letter E with Grave,True,e
-ê,\u00ea,Latin Small Letter E with Circumflex,True,e
+é,\u00e9,Latin Small Letter E with Acute,False,e
+è,\u00e8,Latin Small Letter E with Grave,False,e
+ê,\u00ea,Latin Small Letter E with Circumflex,False,e
 ë,\u00eb,Latin Small Letter E with Diaeresis,False,e
 í,\u00ed,Latin Small Letter I with Acute,False,i
 ì,\u00ec,Latin Small Letter I with Grave,False,i

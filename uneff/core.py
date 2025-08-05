@@ -292,15 +292,7 @@ def clean_content(content: Union[bytes, str], mappings_csv: Optional[str] = None
     """
     # Process content based on type
     if isinstance(content, bytes):
-        # Handle BOM at start of binary content
-        if content.startswith(b'\xef\xbb\xbf'):  # UTF-8 BOM
-            content = content[3:]
-        elif content.startswith(b'\xfe\xff') or content.startswith(b'\xff\xfe'):  # UTF-16 BOM
-            content = content[2:]
-        elif content.startswith(b'\x00\x00\xfe\xff') or content.startswith(b'\xff\xfe\x00\x00'):  # UTF-32 BOM
-            content = content[4:]
-        
-        # Try to decode to text
+        # Try to decode to text without removing BOM first
         try:
             text_content = content.decode('utf-8')
         except UnicodeDecodeError:
@@ -319,10 +311,8 @@ def clean_content(content: Union[bytes, str], mappings_csv: Optional[str] = None
     
     problematic_chars = parse_mapping_csv(mappings_csv)
     
-    # Check and remove BOM if present at start of string
+    # Use the full content for character mapping processing
     cleaned_content = text_content
-    if text_content and ord(text_content[0]) == 0xFEFF:
-        cleaned_content = text_content[1:]
     
     # Count and replace problematic characters
     char_counts = {}
@@ -389,7 +379,7 @@ def analyze_content(content: Union[bytes, str], mappings_csv: Optional[str] = No
         text_content = content
         encoding = "string (already decoded)"
         encoding_errors = False
-        has_bom = text_content and ord(text_content[0]) == 0xFEFF
+        has_bom = text_content and '\ufeff' in text_content
         bom_type = "UTF-8 BOM" if has_bom else None
     
     # Load character mappings
@@ -492,8 +482,8 @@ def clean_file(file_path: str, mapping_file: Optional[str] = None,
     try:
         # Use default mapping file if none provided
         if mapping_file is None:
-            package_dir = os.path.dirname(os.path.abspath(__file__))
-            mapping_file = os.path.join(package_dir, 'uneff_mappings.csv')
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            mapping_file = os.path.join(script_dir, 'uneff_mappings.csv')
         
         # Read problematic character mappings - this will create the file if it doesn't exist
         mappings = read_char_mappings(mapping_file, verbose)
@@ -563,8 +553,8 @@ def analyze_file(file_path: str, mapping_file: Optional[str] = None,
     try:
         # Use default mapping file if none provided
         if mapping_file is None:
-            package_dir = os.path.dirname(os.path.abspath(__file__))
-            mapping_file = os.path.join(package_dir, 'uneff_mappings.csv')
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            mapping_file = os.path.join(script_dir, 'uneff_mappings.csv')
         
         # Ensure mapping file exists (this will create it if it doesn't)
         read_char_mappings(mapping_file, verbose)
@@ -635,8 +625,8 @@ def clean_text(text: str, mapping_file: Optional[str] = None,
     try:
         # Use default mapping file if none provided
         if mapping_file is None:
-            package_dir = os.path.dirname(os.path.abspath(__file__))
-            mapping_file = os.path.join(package_dir, 'uneff_mappings.csv')
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            mapping_file = os.path.join(script_dir, 'uneff_mappings.csv')
         
         # Ensure mapping file exists (this will create it if it doesn't)
         read_char_mappings(mapping_file, verbose)

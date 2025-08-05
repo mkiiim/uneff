@@ -4,15 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "uneff"
-version = "1.0.0"
+dynamic = ["version"]
 description = "Remove BOM and problematic Unicode characters from text files"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "Mark", email = "mark@example.com"},
+    {name = "Mark", email = "mark.emila@gmail.com"},
 ]
 maintainers = [
-    {name = "Mark", email = "mark@example.com"},
+    {name = "Mark", email = "mark.emila@gmail.com"},
 ]
 keywords = ["unicode", "bom", "text-processing", "csv-cleaning", "data-cleaning", "file-processing"]
 classifiers = [

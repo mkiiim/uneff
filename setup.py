@@ -24,7 +24,7 @@ setup(
     name="uneff",
     version=get_version(),
     author="Mark",
-    author_email="mark@example.com",  # Update with your email
+    author_email="mark.emila@gmail.com",
     description="Remove BOM and problematic Unicode characters from text files",
     long_description=read_readme(),
     long_description_content_type="text/markdown",
